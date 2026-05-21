@@ -1,0 +1,28 @@
+# build
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# test
+testfile.bin
+
+# go
+go.work
+go.work.sum
+
+# ide
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.codegraph/
+.sisyphus/
+AGENTS.md
+
+# os
+.DS_Store
+Thumbs.db
