@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,6 +17,7 @@ type scanDoneMsg struct {
 }
 
 type ScanModel struct {
+	ctx      context.Context
 	entries  []discover.Entry
 	cursor   int
 	scanning bool
@@ -39,8 +41,9 @@ var scanCursorStyle = lipgloss.NewStyle().
 var scanEntryStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("252"))
 
-func NewScanModel() ScanModel {
+func NewScanModel(ctx context.Context) ScanModel {
 	return ScanModel{
+		ctx:      ctx,
 		scanning: true,
 	}
 }
@@ -50,7 +53,7 @@ func (m ScanModel) Init() tea.Cmd {
 }
 
 func (m ScanModel) scan() tea.Msg {
-	entries, err := discover.Scan(nil, 3*time.Second)
+	entries, err := discover.Scan(m.ctx, 3*time.Second)
 	return scanDoneMsg{entries: entries, err: err}
 }
 

@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net"
@@ -14,6 +15,13 @@ import (
 )
 
 func Receive(ctx context.Context, remoteAddr string, progress func(receivedBytes int64, totalBytes int64)) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	var dialer net.Dialer
 	conn, err := dialer.DialContext(ctx, "tcp", remoteAddr)
 	if err != nil {
@@ -78,6 +86,8 @@ func Receive(ctx context.Context, remoteAddr string, progress func(receivedBytes
 		}
 	}()
 
+	fileHash := sha256.New()
+
 	var receivedBytes int64
 	for expectedIndex := int32(0); expectedIndex < fileInfo.TotalChunks; expectedIndex++ {
 		header, payload, err := readPacket(ctx, conn)
@@ -98,9 +108,6 @@ func Receive(ctx context.Context, remoteAddr string, progress func(receivedBytes
 		if chunk.ChunkIndex != expectedIndex {
 			return fmt.Errorf("unexpected chunk index: got %d, want %d", chunk.ChunkIndex, expectedIndex)
 		}
-		if protocol.ComputeChecksum(chunk.Data) != chunk.ChunkChecksum {
-			return fmt.Errorf("checksum mismatch for chunk %d", chunk.ChunkIndex)
-		}
 
 		written, err := tempFile.Write(chunk.Data)
 		if err != nil {
@@ -109,6 +116,7 @@ func Receive(ctx context.Context, remoteAddr string, progress func(receivedBytes
 		if written != len(chunk.Data) {
 			return errors.New("short write")
 		}
+		fileHash.Write(chunk.Data)
 		receivedBytes += int64(written)
 		if receivedBytes > fileInfo.FileSize {
 			return fmt.Errorf("received more bytes than expected: %d > %d", receivedBytes, fileInfo.FileSize)
@@ -140,15 +148,13 @@ func Receive(ctx context.Context, remoteAddr string, progress func(receivedBytes
 	if err := tempFile.Close(); err != nil {
 		return err
 	}
-	checksum, err := checksumFile(tempPath)
-	if err != nil {
-		return err
-	}
-	if checksum != fileInfo.FileChecksum {
+
+	var receivedChecksum [32]byte
+	copy(receivedChecksum[:], fileHash.Sum(nil))
+	// FileInfo.FileChecksum is always zero (pre-computation removed for performance).
+	// Only verify against the incrementally computed hash from TransferDone.
+	if receivedChecksum != transferDone.FileChecksum {
 		return errors.New("file checksum mismatch")
-	}
-	if checksum != transferDone.FileChecksum {
-		return errors.New("transfer done checksum mismatch")
 	}
 	if err := os.Rename(tempPath, targetPath); err != nil {
 		return err
@@ -206,13 +212,4 @@ func uniqueOutputPath(fileName string) string {
 			return candidate
 		}
 	}
-}
-
-func checksumFile(path string) ([32]byte, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return [32]byte{}, err
-	}
-	defer file.Close()
-	return protocol.ComputeFileChecksum(file)
 }

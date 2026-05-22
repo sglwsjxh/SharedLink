@@ -1,27 +1,27 @@
 package protocol
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"io"
 )
 
 const (
-	Magic       = "SHLN"
-	DefaultPort = 53349
-	ChunkSize   = 4 * 1024 * 1024
-	ServiceType = "_sharedlink._tcp"
-	HeaderSize  = 9
+	Magic          = "SHLN"
+	DefaultPort    = 53349
+	DefaultPortStr = "53349"
+	ChunkSize      = 4 * 1024 * 1024
+	ServiceType    = "_sharedlink._tcp"
+	HeaderSize     = 9
 )
 
 type PacketType uint8
 
 const (
-	TypeFileInfo    PacketType = 0
-	TypeDataChunk   PacketType = 1
+	TypeFileInfo     PacketType = 0
+	TypeDataChunk    PacketType = 1
 	TypeTransferDone PacketType = 2
-	TypeError       PacketType = 3
+	TypeError        PacketType = 3
 )
 
 type Header struct {
@@ -237,20 +237,6 @@ func ReadPacket(r io.Reader) (Header, []byte, error) {
 		}
 	}
 	return h, payload, nil
-}
-
-func ComputeChecksum(data []byte) [32]byte {
-	return sha256.Sum256(data)
-}
-
-func ComputeFileChecksum(r io.Reader) ([32]byte, error) {
-	h := sha256.New()
-	if _, err := io.Copy(h, r); err != nil {
-		return [32]byte{}, err
-	}
-	var sum [32]byte
-	copy(sum[:], h.Sum(nil))
-	return sum, nil
 }
 
 func CalculateChunks(fileSize int64) int32 {

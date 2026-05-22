@@ -1,5 +1,13 @@
 package main
 
+import (
+	"context"
+	"os"
+	"os/signal"
+)
+
 func main() {
-	Execute()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	ExecuteContext(ctx)
 }

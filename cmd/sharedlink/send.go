@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/spf13/cobra"
 
 	"SharedLink/internal/discover"
 	"SharedLink/internal/protocol"
@@ -45,11 +45,11 @@ Example:
 		}
 		defer mdnsServer.Shutdown()
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
 		model := ui.NewSendModel(info.Name(), info.Size())
-		program := tea.NewProgram(model)
+		program := tea.NewProgram(model, tea.WithContext(ctx))
 
 		go func() {
 			err := transfer.Send(ctx, "", filePath, func(sent int64, total int64) {
@@ -70,10 +70,8 @@ Example:
 		}()
 
 		if _, err := program.Run(); err != nil {
-			cancel()
 			return err
 		}
-		cancel()
 
 		return nil
 	},

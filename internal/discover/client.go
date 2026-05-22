@@ -20,14 +20,19 @@ type Entry struct {
 }
 
 func Scan(ctx context.Context, timeout time.Duration) ([]Entry, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if timeout <= 0 {
 		timeout = 3 * time.Second
 	}
 
 	entriesCh := make(chan *mdns.ServiceEntry, 50)
-	var results []Entry
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	scanCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	go func() {
@@ -38,16 +43,29 @@ func Scan(ctx context.Context, timeout time.Duration) ([]Entry, error) {
 		close(entriesCh)
 	}()
 
-	for entry := range entriesCh {
-		if entry == nil {
-			continue
-		}
-		e := parseEntry(entry)
-		if e != nil {
-			results = append(results, *e)
+	var results []Entry
+loop:
+	for {
+		select {
+		case <-scanCtx.Done():
+			break loop
+		case entry, ok := <-entriesCh:
+			if !ok {
+				break loop
+			}
+			if entry == nil {
+				continue
+			}
+			e := parseEntry(entry)
+			if e != nil {
+				results = append(results, *e)
+			}
 		}
 	}
 
+	if ctx.Err() != nil {
+		return results, ctx.Err()
+	}
 	return results, nil
 }
 

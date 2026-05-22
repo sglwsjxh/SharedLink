@@ -8,9 +8,9 @@ import (
 )
 
 type ServiceMeta struct {
-	Hostname  string
-	FileName  string
-	FileSize  int64
+	Hostname string
+	FileName string
+	FileSize int64
 }
 
 func Register(port int, meta ServiceMeta) (*mdns.Server, error) {
