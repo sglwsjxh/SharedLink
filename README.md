@@ -28,7 +28,7 @@ SharedLink 是一个用 Go 编写的局域网 P2P 文件传输工具。无需服
 
 ```bash
 # 发送端监听端口，等待接收端连接
-sharedlink send ./bigfile.mp4
+sharedlink send <文件路径>
 ```
 
 ### 接收文件

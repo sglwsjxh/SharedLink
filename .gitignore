@@ -7,6 +7,7 @@ bin/
 *.dylib
 
 # test
+test/
 testfile.bin
 
 # go
@@ -26,3 +27,7 @@ AGENTS.md
 # os
 .DS_Store
 Thumbs.db
+
+# logs
+logs/
+*.log
