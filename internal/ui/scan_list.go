@@ -61,7 +61,7 @@ func (m ScanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			m.quitting = true
 			return m, tea.Quit
 		case "r", "R":
@@ -111,19 +111,19 @@ func (m ScanModel) View() string {
 
 	if m.scanning {
 		content += "Scanning...\n"
-		content += scanHelpStyle.Render("Press 'q' to quit")
+		content += scanHelpStyle.Render("Press Ctrl+C to quit")
 		return content
 	}
 
 	if m.err != nil {
 		content += fmt.Sprintf("Error: %v\n", m.err)
-		content += scanHelpStyle.Render("Press 'r' to retry, 'q' to quit")
+		content += scanHelpStyle.Render("Press 'r' to retry, Ctrl+C to quit")
 		return content
 	}
 
 	if len(m.entries) == 0 {
 		content += "No senders found on the network.\n"
-		content += scanHelpStyle.Render("Press 'r' to rescan, 'q' to quit")
+		content += scanHelpStyle.Render("Press 'r' to rescan, Ctrl+C to quit")
 		return content
 	}
 
@@ -145,7 +145,7 @@ func (m ScanModel) View() string {
 		}
 	}
 
-	content += "\n" + scanHelpStyle.Render("↑↓ select  •  enter confirm  •  r rescan  •  q quit")
+	content += "\n" + scanHelpStyle.Render("↑↓ select  •  enter confirm  •  r rescan  •  Ctrl+C quit")
 	return content
 }
 

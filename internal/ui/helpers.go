@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -38,6 +39,21 @@ func formatSpeed(bytes int64, startTime time.Time) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB/s", bps/float64(div), "KMGTPE"[exp])
+}
+
+const barWidth = 50
+
+func renderProgressBar(percent float64) string {
+	if percent < 0 {
+		percent = 0
+	}
+	if percent > 1 {
+		percent = 1
+	}
+	filled := int(math.Round(percent * barWidth))
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", barWidth-filled)
+	pct := fmt.Sprintf(" %3.0f%%", percent*100)
+	return bar + pct
 }
 
 func formatETA(sent, total int64, startTime time.Time) string {

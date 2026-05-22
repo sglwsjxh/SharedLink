@@ -82,8 +82,18 @@ Examples:
 			}
 		}()
 
-		if _, err := program.Run(); err != nil {
+		result, err := program.Run()
+		if err != nil {
 			return err
+		}
+
+		recvModel := result.(ui.RecvModel)
+		if recvModel.Err != nil {
+			fmt.Printf("接收失败: %v\n", recvModel.Err)
+		} else if recvModel.Done {
+			fmt.Printf("接收成功！文件: %s（%.1f MB）\n", recvModel.Filename, float64(recvModel.Filesize)/1024/1024)
+		} else {
+			fmt.Println("已取消接收")
 		}
 
 		return nil

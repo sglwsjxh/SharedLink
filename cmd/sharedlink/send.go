@@ -69,8 +69,18 @@ Example:
 			}
 		}()
 
-		if _, err := program.Run(); err != nil {
+		result, err := program.Run()
+		if err != nil {
 			return err
+		}
+
+		sendModel := result.(ui.SendModel)
+		if sendModel.Err != nil {
+			fmt.Printf("发送失败: %v\n", sendModel.Err)
+		} else if sendModel.Done {
+			fmt.Printf("发送成功！文件: %s（%.1f MB）\n", sendModel.Filename, float64(sendModel.Filesize)/1024/1024)
+		} else {
+			fmt.Println("已取消发送")
 		}
 
 		return nil

@@ -8,7 +8,8 @@ bin/
 
 # test
 test/
-testfile.bin
+test*
+tmp/
 
 # go
 go.work
